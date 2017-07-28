@@ -53,7 +53,7 @@ data [a] = [] | a : [a]
 Thus a `List` value is either `[]`, meaning that it is empty, or it has a 'head' element `a` followed by a 'tail' `[a]`, which is another list. In the latter case, we say `a` is 'cons'ed onto `[a]` by the 'cons' operator `:`. The type variable `a` indicates that a list can be created for any type, with the constraint that the list only contains values of that type. The following are all `List` values:
 
 ```
-2:1:[]         :: [Integer] -- 2:1:[] can be expressed as [1,2]
+2:1:[]         :: [Integer] -- 2:1:[] can be expressed as [2,1]
 'c':'a':'t':[] :: [Char]    -- 'c':'a':'t':[] can be expressed as "cat"
 []             :: [a]       -- The type of a is determined from the
                             -- context in which the value is used
