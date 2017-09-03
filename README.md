@@ -16,6 +16,13 @@ This document is a guide to implementing the k-medoids clustering algorithm usin
     - [Performing Clustering](#performing-clustering)
     - [Completing the Algorithm](#completing-the-algorithm)
 * [Extending the Implementation](#extending-the-implementation)
+* [Worked Examples](#worked-examples)
+    - [Utility Functions](#utility-functions)
+    - [Cluster Functions](#cluster-functions)
+    - [Assignment Functions](#assignment-functions)
+    - [Optimisation Functions](#optimisation-functions)
+    - [Clustering Functions](#clustering-functions)
+    - [Completion Functions](#completion-functions)
 
 ## How to Use this Material
 
@@ -263,11 +270,11 @@ newCluster [3.5] = Cluster [3.5] []
 
 #### `addElement`
 
-Implement the `addElement` function which takes a `Cluster` and a value and adds that value to the `Cluster`'s elements. Examples:
+Implement the `addElement` function which takes a value of any type and a `Cluster` and adds the value to the `Cluster`'s list of elements. Examples:
 
 ```
-addElement (Cluster "cat" []) "dog" = Cluster "cat" ["dog"]
-addElement (Cluster 1 [2,3])  4     = Cluster 1 [2,3,4]
+addElement "dog" (Cluster "cat" []) = Cluster "cat" ["dog"]
+addElement 4 (Cluster 1 [2,3])      = Cluster 1 [2,3,4]
 ```
 
 #### `clusterDistance`
@@ -311,20 +318,20 @@ Recall that, after clusters are created, the next step in the k-medoids algorith
 
 #### `nearestCluster`
 
-Implement the `nearestCluster` function which takes a `Metric`, a `Configuration` and a value and returns a `Configuration` in which the first element is the nearest, according to the `Metric`, `Cluster` to the value. Example:
+Implement the `nearestCluster` function which takes a `Metric`, a value of any type, and a `Configuration` and returns a `Tuple` that contains the nearest `Cluster`, according to the `Metric`, to the value and a `List` of all other `Cluster`s. Example:
 
 ```
 cfg = [Cluster 26 [23,27], Cluster 41 [48,52], Cluster 88 [67,91]]
-nearestCluster (\x y -> (x - y)^2) cfg 77 = [
-    Cluster 88 [67,91], Cluster 26 [23,27], Cluster 41 [48,52]
-]
+nearestCluster (\x y -> (x - y)^2) 77 cfg = (
+    Cluster 88 [67,91], [Cluster 26 [23,27], Cluster 41 [48,52]]
+)
 ```
 
 Hint: consider making use of the `minBy` and `rotations` functions.
 
 #### `assignElement`
 
-Implement the `assignElement` function which takes a `Metric`, a value and a `Configuration` and returns a `Configuration` in which the value has been added to the nearest `Cluster` (according to the `Metric`). Example:
+Implement the `assignElement` function which takes a `Metric`, a value of any type, and a `Configuration` and returns a `Configuration` in which the value has been added to the nearest `Cluster` (according to the `Metric`). Example:
 
 ```
 cfg = [Cluster 26 [23,27], Cluster 41 [48,52], Cluster 88 [67,91]]
@@ -405,21 +412,21 @@ In conjunction with the functionality developed thus far, an iteration of the k-
 
 #### `decluster`
 
-Implement the `decluster` function which takes a `Cluster` and returns a `Tuple` in which the first value is the `Cluster` with the medoids removed and the second value is a `List` of the `Cluster`'s elements. Examples:
+Implement the `decluster` function which takes a `Cluster` and returns a `Tuple` in which the first value is the `List` of elements in the `Cluster` and the second is a variant of the `Cluster` in which only the medoid remains. Examples:
 
 ```
-decluster (Cluster 1 [2,3,4])     = (Cluster 1 [], [2,3,4])
-decluster (Cluster "cat" ["dog"]) = (Cluster "cat" [], ["dog"])
+decluster (Cluster 1 [2,3,4])     = ([2,3,4], Cluster 1 [])
+decluster (Cluster "cat" ["dog"]) = (["dog"], Cluster "cat" [])
 ```
 
 #### `deconfigure`
 
-Implement the `deconfigure` function which takes a `Configuration` and returns a `List` of its `Cluster`s declustered. Example:
+Implement the `deconfigure` function which takes a `Configuration` and returns a `Tuple` in which the first value is a `List` of all non-medoid elements in the `Configuration` and the second is a `List` of all `Cluster`s in the original `Configuration` with their elements removed. Example:
 
 ```
-deconfigure [Cluster 1 [2,3,4], Cluster 6 [7,8,9]] = [
-    (Cluster 1 [], [2,3,4]), (Cluster 6 [], [7,8,9])
-]
+deconfigure [Cluster 1 [2,3,4], Cluster 6 [7,8,9]] = (
+    [2,3,4,7,8,9], [Cluster 1 [], Cluster 6 []]
+)
 ```
 
 Hint: consider using the `unzip` and `concat` functions.
@@ -486,3 +493,379 @@ kmedoids 3 (\x y -> (x - y)^2) [1,4,7,2,5,8,3,6,9] = [
 * It is possible for a configuration to slightly increase in cost before reaching lower cost states, but this possibility is not accounted for by the current implementation of the `localSearch` function. Generally, the k-medoids algorithm is terminated after it fails to improve a configuration in some number of consecutive iterations. Implement an alternative search function that implements this strategy.
 * The quality of a configuration produced by the k-medoids algorithm is affected by the initial collection of medoids since they influence the subsequent assignment of elements. By simply selecting the first _k_ elements as medoids, the `kmedoids` function may contribute to poor solutions for particular datasets. Implement one or more functions that generate the initial set of medoids using alternative strategies and modify `kmedoids` to enable the user to provide their "medoids selection" function of choice.
 * The `localSearch` function, as it is described in this document, hides information by discarding the `Configuration`s it generates in each iteration of search. These 'in-progress' `Configuration`s can provide valuable metadata regarding how the search of the solution space transpired, which can be valuable to individuals using the implementation. Extend `localSearch` and `kmedoids` so that they return all `Configurations` generated in the process of producing the final result.
+
+_____________________________________________
+
+## Worked Examples
+
+### Utility Functions
+
+#### `sumDoubles`
+
+```
+sumDoubles :: [Double] -> Double
+sumDoubles (x:xs) = x + sumDoubles xs
+sumDoubles []     = 0
+```
+
+The most straightforward implementation of the `sumDoubles` function uses explicit recursion. An intuition for the base case can be developed by thinking of the 'neutral' or identity value of the result type based on the operation the function performs. The identity of summation is zero, therefore this should be the result in the base case. This approach is called explicit recursion because, in the non-base case, the function invokes itself on the tail of the argument list. Note that the `Prelude` module includes a `sum` function that works for all numerical types, making `sumDoubles` unnecessary.
+
+#### `minBy`
+
+```
+minBy :: (a -> Double) -> [a] -> a
+minBy _ []  = error "Cannot calculate minimum of empty list!"
+minBy _ [x] = x
+minBy f (h:t)
+    | f h < f x = h
+    | otherwise = x
+    where x = minBy f t
+```
+
+The `minBy` function has three logical cases: 1) the argument list is empty, therefore no result can be provided (hence `error`), 2) the argument list contains only one value, making search unnecessary, and 3) the argument list contains many values so search for the minimum is necessary. The latter case can be decomposed into a comparison between the 'size' of the head of the list (as indicated by the `f` function) and the minimum of the tail (which can be calculated using `minBy`).
+
+Although beyond the scope of this guide, a more idiomatic implementation of `minBy` can be created by making use of the `minimumBy` and `comparing` functions. The `comparing` function (type `Ord a => (b -> a) -> b -> b -> Ordering`, where `Ord` indicates that values of type `a` must implement the `Ord` typeclass and thus have a notion of order) takes a function that can indicate the 'size' of an element and converts it into a function that returns the `Ordering` of two of those elements; that is, whether the first value is less than, equal to, or greater than the second. The `minimumBy` function takes one such comparison function and a list and returns the minimum element of that list according to the function. With `comparing` and `minimumBy`, the `minBy` function can be implemented as follows:
+
+```
+minBy :: (a -> Double) -> [a] -> a
+minBy f = minimumBy (comparing f)
+```
+
+Note that the `comparing` function is defined in the `Data.Ord` module.
+
+#### `rotations`
+
+```
+rotations :: [a] -> [[a]]
+rotations [] = error "Cannot generate rotations of empty list!"
+rotations xs = takeN . go $ cycle xs
+    where
+        go xs' = takeN xs' : go (tail xs)
+        takeN = take (length xs)
+```
+
+There are many ways to implement `rotations` and the above is just one approach. Recall that the `cycle` function creates an infinite list by cycling the list it receives. This implementation takes the first `n` elements of this infinite list, then repeats this action on that list's tail. By doing this `n` number of times, where `n` is the length of the argument list, all rotations are generated.
+
+### Cluster Functions
+
+#### `newCluster`
+
+```
+newCluster :: a -> Cluster a
+newCluster m = Cluster m []
+```
+
+The `newCluster` function depends on the `Cluster a [a]` data constructor to construct a value of type `Cluster`. As the argument to `newCluster` is intended to be the medoid (hence the parameter name `m`), it occupies the 'significant' element position (the first `a` in `Cluster a [a]`). Furthermore, it _must_ occupy this position because the Haskell language won't allow the construction of a `Cluster` without a value for this position, whereas the list can be empty (and is in a new cluster because it is yet to be filled with non-medoid elements).
+
+#### `addElement`
+
+```
+addElement :: a -> Cluster a -> Cluster a
+addElement e (Cluster m es) = Cluster m (e:es)
+```
+
+Adding an element to a cluster means associating it with the medoid of that cluster. The medoid remains in its place (it is assumed to remain the most representative element of the cluster despite the addition of the new element) and the element is made part of the cluster's collection of elements. In this implementation the parameter names `e` and `es` represent 'element' and 'cluster elements', respectively.
+
+#### `clusterDistance`
+
+```
+clusterDistance :: Metric a -> a -> Cluster a -> Double
+clusterDistance f e (Cluster m _) = f m e
+```
+
+The distance of an element from a cluster in the k-medoids algorithm is calculated as the distance between that element and the cluster's medoid. The `clusterDistance` function performs this calculation by applying the distance metric `f` to the element `e` and medoid `m` of the argument `Cluster`. The non-medoid elements of the `Cluster` are not relevant, so `_` is used to avoid creating a binding.
+
+#### `clusterCost`
+
+```
+clusterCost :: Metric a -> Cluster a -> Double
+clusterCost f (Cluster m es) = go (f m) es
+    where
+        go f' (e:es') = f' e + go f' es'
+        go _  []      = 0
+```
+
+Recall that the cost of a cluster is the sum of the distances between the medoid and cluster elements according to the distance function. As the elements are stored within a list, the cluster cost is calculated by recursing through the elements, applying the distance function with respect to the medoid to each, and summing the results. Note that the above implementation can be modified by making use of the `sum` function:
+
+```
+clusterCost :: Metric a -> Cluster a -> Double
+clusterCost f (Cluster m es) = sum $ go (f m) es
+    where
+        go f' (e:es') = f' e : go f' es'
+        go _ []       = [0]
+```
+
+As a result of this change the only action of the `go` function is to apply a function to each element in the given list and collect the results into a new list. This is identical to the behaviour of the `map` function. With `map`, the `go` function is no longer necessary and `clusterCost` can be simplified as follows:
+
+```
+clusterCost :: Metric a -> Cluster a -> Double
+clusterCost f (Cluster m es) = sum $ map (f m) es
+```
+
+### Assignment Functions
+
+#### `nearestCluster`
+
+```
+nearestCluster :: Metric a -> a -> Configuration a -> (Cluster a, Configuration a)
+nearestCluster f e cs = (nearest, others)
+    where
+        (nearest:others) = minBy distance (rotations cs)
+        distance (c:_) = clusterDistance f e c
+```
+
+The `nearestCluster` function has to search through the `Cluster`s in the given `Configuration` to find that which is nearest to the given element, but must also return the `Cluster`s that are not nearest. This is so that a caller of `nearestCluster` can manipulate that nearest `Cluster` and then combine it with the rest, reconstructing the `Configuration` (if `nearestCluster` instead only returned the nearest `Cluster`, the caller would have to identify the position of that `Cluster` in the `Configuration`).
+
+As such, we cannot simply recurse through the given `Configuration`, as this would prevent us from retaining the more distant `Cluster`s. In the above implementation, we address this by searching for the unique rotation of the `Configuration` in which the head `Cluster` is nearest, meaning that the tail contains all of the `Cluster`s that are more distant. The search is performed by `minBy` and the rotations are generated by `rotations`.
+
+The implementation of `nearestCluster` can be simplified by using the `head` and `tail` functions instead of pattern matching on lists. These functions should generally be avoided since they can fail when used on empty lists. However, the error cases in `nearestCluster` can only be encountered if the result of `rotations` is an empty list, which is not possible as can be seen from the implementation of `rotations` above. Therefore `nearestCluster` can be simplified as follows:
+
+```
+nearestCluster :: Metric a -> a -> Configuration a -> (Cluster a, Configuration a)
+nearestCluster f e cs = (head result, tail result)
+    where
+        result = minBy distance (rotations cs)
+        distance cs' = clusterDistance f e (head cs')
+```
+
+The revised `nearestCluster` is verbose with respect to `cs` in the function `distance`. The `distance` function has the type `Configuration -> Double`. Observe that the functions it is composed of are `clusterDistance f e` (type `Cluster a -> Double`) and `head` (type `[b] -> b`, where `b` in this case is `Configuration a`, therefore `Configuration a -> Cluster a`). The result of `head` is simply passed to `clusterDistance f e`. Functions that behave in this way, where the output type of the first is the input type of the second, can be composed into a single function using function composition:
+
+```
+(.) :: (b -> c) -> (a -> b)
+(.) f g x = f $ gx
+```
+
+The composition function `(.)` enables `distance` to be simplified as follows:
+
+```
+nearestCluster :: Metric a -> a -> Configuration a -> (Cluster a, Configuration a)
+nearestCluster f e cs = (head result, tail result)
+    where
+        result = minBy distance (rotations cs)
+        distance = (clusterDistance f e) . head
+```
+
+#### `assignElement`
+
+```
+assignElement :: Metric a -> a -> Configuration a -> Configuration a
+assignElement f e cs = addElement e nearest : others
+    where (nearest, others) = nearestCluster f e cs
+```
+
+This implementation of the `assignElement` function exploits the design of `nearestCluster`. Because the result of `nearestCluster` provides both the nearest `Cluster` and a `Configuration` consisting of the rest of the `Cluster`s, `assignElement` need only cons the modified `Cluster` onto that `Configuration` to rebuild it, maintaining the integrity of the `Configuration` and avoiding the loss or duplication of elements.
+
+#### `assignElements`
+
+```
+assignElements :: Metric a -> [a] -> Configuration a -> Configuration a
+assignElements f es cs = go (\x y -> assignElement f x y) cs es
+    where
+        go f cs' (e:es') = f e (go f cs' es')
+        go _ cs' []     = cs'
+```
+
+The main complication in the implementation of `assignElements` is that each element to be added must be added to the `Configuration` that was produced by adding the previous element. Simply adding each element to the initial argument `Configuration` will ultimately cause all but one of the elements to be lost. Thus the `go` function must pass along the result `Configuration` as it recurses through the elements to add. When all elements are added, `go` returns the last generated `Configuration`.
+
+This pattern in `go` of 'aggregating' changes that occur due to list processing is common and is generalised by the higher-order _fold_ functions, which come in the 'left' and 'right' varieties. The `foldr` ('fold right') function is defined as follows:
+
+```
+foldr :: (a -> b -> b) -> b -> [a] -> b
+foldr f z (x:xs) = f x (foldr f z xs)
+foldr f z []     = z
+```
+
+This function recurses through a list of elements of type `a` and uses a function `a -> b -> b` to combine them into a result of type `b`. When the end of the list is encountered, the 'default' value `z`, of type `b`, is returned. By taking a value of type `b` as an input, the `a -> b -> b` function enables the user to 'retain changes' applied while `foldr` recurses. In our `go` function, the changes are the modified `Configuration`s generated by adding elements. Using `foldr`, the `assignElements` function can be implemented as follows:
+
+```
+assignElements :: Metric a -> [a] -> Configuration a -> Configuration a
+assignElements f es cs = foldr (\x y -> assignElement f x y) cs es
+```
+
+The default value in this case for `foldr` is the initial `Configuration`, meaning that `assignElements` returns an unchanged `Configuration` if it receives no elements to assign. If there are elements to assign, then each is assigned to the `Configuration` produced by assigning the previous element, starting with the initial `Configuration`. Note that the function `\x y -> assignElement f x y` can be eta-reduced to further simplify `assignElements`:
+
+```
+assignElements :: Metric a -> [a] -> Configuration a -> Configuration a
+assignElements f es cs = foldr (assignElement f) cs es
+```
+
+The `es` and `cs` parameters also appear to be candidates for eta-reduction, but cannot be reduced because they do not appear in the same order in `assignElements` and the call to `foldr (assignElement f)`. This can be remedied by flipping the order in which `foldr (assignElement f)` expects its arguments, which can be performed using the `flip` function:
+
+```
+flip :: (a -> b -> c) -> (b -> a -> c)
+flip f x y = f y x
+```
+
+With `flip`, the eta reduction of `es` and `cs` can be performed:
+
+```
+assignElements :: Metric a -> [a] -> Configuration a -> Configuration a
+assignElements f = flip $ foldr (assignElement f)
+```
+
+Incidentally, the `sumDoubles` function can also be implemented in terms of `foldr`; the default value is the summation identity and the 'aggregation' function is simply `(+)`:
+
+```
+sumDoubles :: [Double] -> Double
+sumDoubles = foldr (+) 0
+```
+
+Contrast with the explicit recursion implementation of `sumDoubles` in the [Utility Functions](#utility-functions) section.
+
+### Optimisation Functions
+
+#### `clusterPermutations`
+
+```
+clusterPermutations :: Cluster a -> [Cluster a]
+clusterPermutations (Cluster m es) = go newCluster' $ rotations (m:es)
+    where
+        go f' (h:t) = f' h : go f' t
+        go f' []    = []
+        newCluster' (h:t) = Cluster h t
+```
+
+The only significant element within a `Cluster` is the medoid. That is to say, the other elements can be in any order without changing the 'meaning' of a `Cluster`. Thus, generating the permutations of a `Cluster` requires simply isolating each element of the cluster (including the medoid) in turn. In the above implementation, this is achieved using the `rotations` function. Note that the behaviour of the `go` function is identical to the `map`. Therefore, the implementation of `clusterPermutations` can be further simplified as follows:
+
+```
+clusterPermutations :: Cluster a -> [Cluster a]
+clusterPermutations (Cluster m es) = map newCluster' $ rotations (m:es)
+    where newCluster' (h:t) = Cluster h t
+```
+
+#### `updateCluster`
+
+```
+updateCluster :: Metric a -> Cluster a -> Cluster a
+updateCluster f c = minBy (clusterCost f) (clusterPermutations c)
+```
+
+An 'updated' `Cluster` is the version of that `Cluster` in which the medoid is nearest to its elements, and therefore has the lowest possible cost. Using the `clusterPermutations` function to generate all permutations of the given `Cluster` in terms of its potential medoid, the `updateCluster` function need only search for the permutation that has the lowest cost. Note that the functions `minBy (clusterCost f)` and `clusterPermutations` have the types `[b] -> b` and `Cluster a -> [Cluster a]`, respectively, making them candidates for composition (and removing the need for parameter `c`):
+
+```
+updateCluster :: Metric a -> Cluster a -> Cluster a
+updateCluster f = minBy (clusterCost f) . clusterPermutations
+```
+
+#### `updateConfiguration`
+
+```
+updateConfiguration :: Metric a -> Configuration a -> Configuration a
+updateConfiguration f (c:cs) = updateCluster f c : updateConfiguration f cs
+updateConfiguration f []     = []
+```
+
+Updating a `Configuration` only requires updating the `Cluster`s it contains, which can be achieved by using explicit recursion as per the above implementation, but is much more elegantly achieved by using the `map` function (which also allows the `Configuration` parameter to be eta-reduced):
+
+```
+updateConfiguration :: Metric a -> Configuration a -> Configuration a
+updateConfiguration f = map $ updateCluster f
+```
+
+### Clustering Functions
+
+#### `decluster`
+
+```
+decluster :: Cluster a -> ([a], Cluster a)
+decluster (Cluster m xs) = (xs, newCluster m)
+```
+
+The `decluster` function need only pattern match to isolate the given `Cluster`'s medoid and its elements. The `newCluster` function is able to create an empty `Cluster` for a medoid, which makes it ideal for creating the empty version of that `Cluster`.
+
+#### `deconfigure`
+
+```
+deconfigure :: Configuration a -> ([a], Configuration a)
+deconfigure cs = (concat elements, medoids)
+    where (elements, medoids) = unzip (map decluster cs)
+```
+
+Mapping over the `Cluster` in a `Configuration` with `decluster` produces a list of tuples that contain, in the first value, a list of elements in a `Cluster` and, in the second, an 'empty' variant of the `Cluster` that contains only the medoid. The `unzip` function breaks this list into two lists, one of the lists of extracted elements and the other of the 'empty' `Cluster`s. The `concat` function is used to create a single list from the individual lists of extracted elements.
+
+#### `kmedoidsIteration`
+
+```
+kmedoidsIteration :: Metric a -> Configuration a -> Configuration a
+kmedoidsIteration f cs = updateConfiguration f (assignElements f cs' xs)
+    where (cs', xs) = deconfigure cs
+```
+
+Since the `kmedoidsIteration` function implements an iteration of the k-medoids algorithm, it must perform three actions: remove the elements from all `Cluster`s, assign all elements to the empty `Cluster`s, and optimise each `Cluster` according to cost. These actions are implemented by the `deconfigure`, `assignElements` and `updateConfiguration` functions, respectively, thus `kmedoidsIteration` can be expressed as a combination of those functions.
+
+Pattern matching on the result of `deconfigure` so that the values can be passed to `assignElements f` may not be desirable. The `uncurry` function can be used to modify a function to take a tuple instead of two arguments:
+
+```
+uncurry :: (a -> b -> c) -> ((a, b) -> c)
+uncurry f p =  f (fst p) (snd p)
+```
+
+With `uncurry`, result of `deconfigure` can be directly passed to `assignElements f`:
+
+```
+kmedoidsIteration :: Metric a -> Configuration a -> Configuration a
+kmedoidsIteration f cs = updateConfiguration f assigned
+    where assigned = uncurry' (assignElements f) (deconfigure cs)
+```
+
+The position of the binding `cs` at the end of the clause is a hint that function composition can be used to simplify the function. Note that in the above implementation, the result of `deconfigure cs` is simply passed to `uncurry (assignElements f)`, the result of which is simply passed to `updateConfiguration f`. Thus, the functions can be composed together:
+
+```
+kmedoidsIteration :: Metric a -> Configuration a -> Configuration a
+kmedoidsIteration f = updateConfiguration f . (uncurry' (assignElements f)) . deconfigure
+```
+
+### Completion Functions
+
+#### `configurationCost`
+
+```
+configurationCost :: Metric a -> Configuration a -> Double
+configurationCost f cs = sum $ map (clusterCost f) cs
+```
+
+This function is similar to `clusterCost` and the same rationale for its implementation applies. Mapping `clusterCost f` over the `Cluster`s in the given `Configuration` results in a list of their scores which can be summed using the `sum` function. Note that as the type of `sum` is `[Double] -> Double` (in this case) and the type of `map (clusterCost f)` is `[a] -> [Double]`, they are candidates for function composition:
+
+```
+configurationCost :: Metric a -> Configuration a -> Double
+configurationCost f = sum . map (clusterCost f)
+```
+
+#### `localSearch`
+
+```
+localSearch :: Metric a -> Configuration a -> Configuration a
+localSearch f cs
+    | cost cs' < cost cs = localSearch f cs'
+    | otherwise          = cs
+  where
+    cost = configurationCost f
+    cs' = kmedoidsIteration f cs
+```
+
+The `localSearch` function generates a subsequent iteration of the given `Configuration` and tests if it has a lower configuration cost. If not, the solution cannot be improved and the argument `Configuration` is returned. If so, `localSearch` is performed on the generated `Configuration`. Guards are used to test the search condition.
+
+An alternative approach is to consider search to involve an infinite sequence of solutions that is generated until a `Configuration` poorer than the previous is encountered. The `iterate` function can be used to generate this sequence and a `search` function can be used to implement the termination condition:
+
+```
+localSearch :: Metric a -> Configuration a -> Configuration a
+localSearch f = search . iterate (kmedoidsIteration f)
+    where
+        cost = configurationCost f
+        search (x:y:xs)
+            | cost x > cost y = search (y:xs)
+            | otherwise       = x
+```
+
+#### `kmedoids`
+
+```
+kmedoids :: Int -> Metric a -> [a] -> Configuration a
+kmedoids _ f [] = []
+kmedoids k f xs = localSearch f initial (kmedoidsIteration f initial)
+    where
+        initial = assignElements f (map newCluster medoids) elements
+        (medoids, elements) = splitAt k xs
+```
+
+The `kmedoids` function has to perform three steps: it needs to identify the elements to serve as the initial medoids, it has to generate the initial configuration, and it has to invoke the search on that configuration. These tasks are performed by the `splitAt`, `assignElements` and `localSearch` functions, respectively, allowing `kmedoids` to be implemented as a combination of those functions.
