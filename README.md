@@ -196,6 +196,15 @@ Haskell contains an `error` function that enables the execution of a program to 
 
 ### Warm-up
 
+#### `lengthDouble`
+
+Implement the `lengthDouble` function which takes a list and returns its length as a value of type `Double`. Examples:
+
+```
+lengthDouble [6,4,3,9] = 4.0
+lengthDouble "cat"     = 3.0
+```
+
 #### `sumDoubles`
 
 Implement the `sumDoubles` function which takes a list of `Double`s and returns their sum. Examples:
@@ -210,9 +219,9 @@ sumDoubles []              = 0.0
 Implement the `minBy` function which takes a function _f_ and a list and returns the smallest element of that list. The _f_ function maps elements of the list to `Double` values that represent the elements' 'size', by which they are sorted (smaller values first). Examples:
 
 ```
-minBy length ["cube", "house", "cat"] = "cat"
-minBy (\x -> (x - 25)^2) [25, 16, 36] = 25
-minBy (-10) []                        = error "'minBy': list must not be empty"
+minBy lengthDouble ["cube", "house", "cat"] = "cat"
+minBy (\x -> (x - 25)^2) [25, 16, 36]       = 25
+minBy (-10) []                              = error "'minBy': list must not be empty"
 ```
 
 #### `rotations`
@@ -500,6 +509,16 @@ _____________________________________________
 
 ### Utility Functions
 
+#### `lengthDouble`
+
+```
+lengthDouble :: [a] -> Double
+lengthDouble (x:xs) = 1.0 + lengthDouble xs
+lengthDouble []     = 0.0
+```
+
+The most straightforward implementation of the `lengthDouble` function uses explicit recursion, in that the function explicitly calls itself in at least one of its clauses. The recursive clause exploits the knowledge that a non-empty list consists of a head element and another list, meaning that the length of that list is 1 (1.0 since the result type is `Double`) plus the length of the adjoining list. In the non-recursive clause, the empty list is mapped directly to the value 0.0. We can be confident that the empty list case will eventually be reached for all inputs because `lengthDouble` recurses on the tail of the argument list. Note that the `Prelude` module includes a `genericLength` function that works for all numerical types, making `lengthDouble` unnecessary.
+
 #### `sumDoubles`
 
 ```
@@ -508,7 +527,7 @@ sumDoubles (x:xs) = x + sumDoubles xs
 sumDoubles []     = 0
 ```
 
-The most straightforward implementation of the `sumDoubles` function uses explicit recursion. An intuition for the base case can be developed by thinking of the 'neutral' or identity value of the result type based on the operation the function performs. The identity of summation is zero, therefore this should be the result in the base case. This approach is called explicit recursion because, in the non-base case, the function invokes itself on the tail of the argument list. Note that the `Prelude` module includes a `sum` function that works for all numerical types, making `sumDoubles` unnecessary.
+The `sumDoubles` function also uses explicit recursion. An intuition for the base case can be developed by thinking of the 'neutral' or identity value of the result type based on the operation the function performs. The identity of summation is zero, therefore this is the result in the base case. Note that the `Prelude` module includes a `sum` function that works for all numerical types, making `sumDoubles` unnecessary.
 
 #### `minBy`
 
@@ -703,14 +722,19 @@ assignElements :: Metric a -> [a] -> Configuration a -> Configuration a
 assignElements f = flip $ foldr (assignElement f)
 ```
 
-Incidentally, the `sumDoubles` function can also be implemented in terms of `foldr`; the default value is the summation identity and the 'aggregation' function is simply `(+)`:
+Note that the `sumDoubles` function involves a notion of 'aggregation' and can also be implemented in terms of `foldr`; the default value is the summation identity and the 'aggregation' function is simply `(+)`:
 
 ```
 sumDoubles :: [Double] -> Double
 sumDoubles = foldr (+) 0
 ```
 
-Contrast with the explicit recursion implementation of `sumDoubles` in the [Utility Functions](#utility-functions) section.
+Contrast with the explicit recursion implementation of `sumDoubles` in the [Utility Functions](#utility-functions) section. The `lengthDouble` also has a notion of 'aggregation', but implementing it in terms of `foldr` is slightly more complicated since the function ignores the value of each element of the list (it only cares that the elements exist):
+
+```
+lengthDouble :: [a] -> Double
+lengthDouble = foldr (\_ y -> 1.0 + y) 0.0
+```
 
 ### Optimisation Functions
 
