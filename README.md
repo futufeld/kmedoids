@@ -170,6 +170,7 @@ The `take` function expects an integer _n_ and a `List` and returns the first _n
 ```
 take 3 [2,4,6,8,10] = [2,4,6]
 take 5 [1,2,3]      = [1,2,3]
+take 0 "cat"        = ""
 ```
 
 #### `splitAt :: Int -> [a] -> ([a], [a])`
