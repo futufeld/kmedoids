@@ -682,7 +682,7 @@ assignElements :: Metric a -> [a] -> Configuration a -> Configuration a
 assignElements f es cs = foldr (\x y -> assignElement f x y) cs es
 ```
 
-The default value in this case for `foldr` is the initial `Configuration`, meaning that `assignElements` returns an unchanged `Configuration` if it receives no elements to assign. If there are elements to assign, then each is assigned to the `Configuration` produced by assigning the previous element, starting with the initial `Configuration`. Note that the function `\x y -> assignElement f x y` can be eta-reduced to further simplify `assignElements`:
+The default value in this case for `foldr` is the initial `Configuration`, meaning that `assignElements` returns an unchanged `Configuration` if it receives no elements to assign. If there are elements to assign, then each is assigned to the `Configuration` produced by assigning the previous element, starting with the initial `Configuration`. Note that the function `\x y -> assignElement f x y` has the type `a -> Configuration a` and the type of `assignElement f` is `a -> Configuration a`; indeed, the bindings of `x` and `y` in the former only exist so that the arguments of `assignElement f` can be specified. In such cases [eta reduction](https://wiki.haskell.org/Eta_conversion) can be applied to simplify expressions:
 
 ```
 assignElements :: Metric a -> [a] -> Configuration a -> Configuration a
