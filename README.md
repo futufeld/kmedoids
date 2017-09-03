@@ -47,7 +47,7 @@ Despite its simplicity, this algorithm has some useful statistical properties an
 
 ### Useful Types for Implementing the k-medoids Algorithm
 
-This section provides a brief overview of the `List` and `Tuple` types, which are both useful for implementing the algorithm, and describes functions useful for manipulating `List`s. Each function has a purpose in the implementation of the k-medoid algorithm, if you choose to use it. This section ends with a 'warm-up' exercise that asks you to implement three functions that can also be useful in implementing k-medoids.
+This section provides a brief overview of the `List` and `Tuple` types, which are both useful for implementing the algorithm, and describes functions useful for manipulating values of type `List`. Each function has a purpose in the implementation of the k-medoid algorithm, if you choose to use it. This section ends with a 'warm-up' exercise that asks you to implement three functions that can also be useful in implementing k-medoids.
 
 ###  `List`
 
@@ -57,7 +57,7 @@ The `List` type has the following structure:
 data [a] = [] | a : [a]
 ```
 
-Thus a `List` value is either `[]`, meaning that it is empty, or it has a 'head' element `a` followed by a 'tail' `[a]`, which is another list. In the latter case, we say `a` is 'cons'ed onto `[a]` by the 'cons' operator `:`. The type variable `a` indicates that a list can be created for any type, with the constraint that the list only contains values of that type. The following are all `List` values:
+Thus a list value is either `[]`, meaning that it is empty, or it has a 'head' element `a` followed by a 'tail' `[a]`, which is another list. In the latter case, we say `a` is 'cons'ed onto `[a]` by the 'cons' operator `:`. The type variable `a` indicates that a list can be created for any type, with the constraint that the list only contains values of that type. The following are all list values:
 
 ```
 2:1:[]         :: [Integer] -- 2:1:[] can be expressed as [2,1]
@@ -66,7 +66,7 @@ Thus a `List` value is either `[]`, meaning that it is empty, or it has a 'head'
                             -- context in which the value is used
 ```
 
-We can exploit the structure of `List` to traverse a sequence of values. For example:
+We can exploit the structure of list to traverse a sequence of values. For example:
 
 ```
 length :: [a] -> Integer
@@ -104,7 +104,7 @@ snd (_, y) = y
 
 #### `head :: [a] -> a`
 
-The `head` function returns the first element of the `List` value it receives. If `tail` is given an empty `List`, it throws an error. Examples:
+The `head` function returns the first element of the list value it receives. If `head` is given an empty list, it throws an error. Examples:
 
 ```
 head [1,2,3] = 1
@@ -114,7 +114,7 @@ head []      = error "Prelude.head: empty list"
 
 #### `tail :: [a] -> [a]`
 
-The `tail` function returns a `List` that contains every element, in the same sequence, of the `List` it receives but with the first element omitted. If `tail` is given an empty `List`, it throws an error. Examples:
+The `tail` function returns a list that contains every element, in the same sequence, of the list it receives but with the first element omitted. If `tail` is given an empty list, it throws an error. Examples:
 
 ```
 tail [1,2,3] = [2,3]
@@ -124,7 +124,7 @@ tail []      = error "Prelude.tail: empty list"
 
 #### `cycle :: [a] -> [a]`
 
-The `cycle` function returns an infinite `List` that repeats elements in the `List` it receives. If `cycle` is given an empty `List`, it throws an error. Examples:
+The `cycle` function returns an infinite list that repeats elements in the list it receives. If `cycle` is given an empty list, it throws an error. Examples:
 
 ```
 cycle [1,2,3] = [1,2,3,1,2,3,1,2,3,1,2,...
@@ -134,7 +134,7 @@ cycle []      = error "Prelude.cycle: empty list"
 
 #### `iterate :: (a -> a) -> a -> [a]`
 
-The `iterate` function generates an infinite `List` by repeatedly applying the `(a -> a)` function to the last generated element, starting with the non-function argument it receives. Example:
+The `iterate` function generates an infinite list by repeatedly applying the `(a -> a)` function to the last generated element, starting with the non-function argument it receives. Example:
 
 ```
 iterate (+3) 1 = [1, 4, 7, 11, ...
@@ -142,7 +142,7 @@ iterate (+3) 1 = [1, 4, 7, 11, ...
 
 #### `map :: (a -> b) -> [a] -> [b]`
 
-The `map` function returns the result of applying the given function to every element in the given `List`. Examples:
+The `map` function returns the result of applying the given function to every element in the given list. Examples:
 
 ```
 map (+1) [1,2,3]  = [2,3,4]
@@ -152,7 +152,7 @@ map odd []        = []
 
 #### `concat :: [[a]] -> [a]`
 
-The `concat` function returns a single `List` that consists of all the elements in the `List` of `List`s it receives. Examples:
+The `concat` function returns a single list that consists of all the elements in the list of lists it receives. Examples:
 
 ```
 concat [[1,2,3],[4,5,6]] = [1,2,3,4,5,6]
@@ -162,7 +162,7 @@ concat []                = []
 
 #### `unzip :: [(a, b)] -> ([a], [b])`
 
-The `unzip` function expects a `List` of `Tuple`s and returns two `List`s, one that contains the first element of each `Tuple` and one that contains the second element of each `Tuple`. Examples:
+The `unzip` function expects a list of `Tuple`s and returns two lists, one that contains the first element of each `Tuple` and one that contains the second element of each `Tuple`. Examples:
 
 ```
 unzip [(1,4),(2,5),(3,6)]             = ([1,2,3], [4,5,6])
@@ -172,7 +172,7 @@ unzip []                              = []
 
 #### `take :: Int -> [a] -> [a]`
 
-The `take` function expects an integer _n_ and a `List` and returns the first _n_ elements of that `List`. Examples:
+The `take` function expects an integer _n_ and a list and returns the first _n_ elements of that list. Examples:
 
 ```
 take 3 [2,4,6,8,10] = [2,4,6]
@@ -182,7 +182,7 @@ take 0 "cat"        = ""
 
 #### `splitAt :: Int -> [a] -> ([a], [a])`
 
-The `splitAt` function splits the given `List` at the _n_th element, where _n_ is the given `Int`, and returns a `Tuple` consisting of the two resultant `List`s. Regarding the result, the _n_th element is in the first `List`. Examples:
+The `splitAt` function splits the given list at the _n_th element, where _n_ is the given `Int`, and returns a `Tuple` consisting of the two resultant lists. Regarding the result, the _n_th element is in the first list. Examples:
 
 ```
 splitAt 1 [1,2,3] = ([1], [2,3])
@@ -198,7 +198,7 @@ Haskell contains an `error` function that enables the execution of a program to 
 
 #### `sumDoubles`
 
-Implement the `sumDoubles` function which takes a `List` of `Double`s and returns their sum. Examples:
+Implement the `sumDoubles` function which takes a list of `Double`s and returns their sum. Examples:
 
 ```
 sumDoubles [1.4, 2.5, 4.6] = 8.5
@@ -207,7 +207,7 @@ sumDoubles []              = 0.0
 
 #### `minBy`
 
-Implement the `minBy` function which takes a function _f_ and a `List` and returns the smallest element of that `List`. The _f_ function maps elements of the list to `Double` values that represent the elements' 'size', by which they are sorted (smaller values first). Examples:
+Implement the `minBy` function which takes a function _f_ and a list and returns the smallest element of that list. The _f_ function maps elements of the list to `Double` values that represent the elements' 'size', by which they are sorted (smaller values first). Examples:
 
 ```
 minBy length ["cube", "house", "cat"] = "cat"
@@ -217,7 +217,7 @@ minBy (-10) []                        = error "'minBy': list must not be empty"
 
 #### `rotations`
 
-Implement the `rotations` function which returns all permutations of a `List` that can be generated by cyclically rotating that `List`. Examples:
+Implement the `rotations` function which returns all permutations of a list that can be generated by cyclically rotating that list. Examples:
 
 ```
 rotations [1,2,3] = [[1,2,3], [2,3,1], [3,2,1]]
@@ -239,7 +239,7 @@ Clusters are a collection of elements, one of which is the cluster's medoid. The
 data Cluster a = Cluster a [a]
 ```
 
-The type variable `a` in the above definition enables us to represent clusters of values of any type, as is characteristic of the k-medoids algorithm. The data constructor `Cluster a [a]` enables us to treat the medoid - the independent `a` - as a 'special' example of the cluster's elements. The non-medoid elements of the cluster reside in the `List`.
+The type variable `a` in the above definition enables us to represent clusters of values of any type, as is characteristic of the k-medoids algorithm. The data constructor `Cluster a [a]` enables us to treat the medoid - the independent `a` - as a 'special' example of the cluster's elements. The non-medoid elements of the cluster reside in the list.
 
 For the k-medoids algorithm to function, the ability to measure the distance between values of type `a` is required. We can represent the distance metrics that perform this task as follows:
 
@@ -318,7 +318,7 @@ Recall that, after clusters are created, the next step in the k-medoids algorith
 
 #### `nearestCluster`
 
-Implement the `nearestCluster` function which takes a `Metric`, a value of any type, and a `Configuration` and returns a `Tuple` that contains the nearest `Cluster`, according to the `Metric`, to the value and a `List` of all other `Cluster`s. Example:
+Implement the `nearestCluster` function which takes a `Metric`, a value of any type, and a `Configuration` and returns a `Tuple` that contains the nearest `Cluster`, according to the `Metric`, to the value and a list of all other `Cluster`s. Example:
 
 ```
 cfg = [Cluster 26 [23,27], Cluster 41 [48,52], Cluster 88 [67,91]]
@@ -342,7 +342,7 @@ assignElement (\x y -> (x - y)^2) 43 cfg = [
 
 #### `assignElements`
 
-Implement the `assignElements` function which takes a `Metric`, a `List` and a `Configuration` and returns that `Configuration` with the elements of the `List` added. Each `List` element should be in its nearest `Cluster`, according to the `Metric`, in the returned `Configuration`. Example:
+Implement the `assignElements` function which takes a `Metric`, a list and a `Configuration` and returns that `Configuration` with the elements of the list added. Each list element should be in its nearest `Cluster`, according to the `Metric`, in the returned `Configuration`. Example:
 
 ```
 cfg = [Cluster 26 [23,27], Cluster 41 [48,52], Cluster 88 [67,91]]
@@ -412,7 +412,7 @@ In conjunction with the functionality developed thus far, an iteration of the k-
 
 #### `decluster`
 
-Implement the `decluster` function which takes a `Cluster` and returns a `Tuple` in which the first value is the `List` of elements in the `Cluster` and the second is a variant of the `Cluster` in which only the medoid remains. Examples:
+Implement the `decluster` function which takes a `Cluster` and returns a `Tuple` in which the first value is the list of elements in the `Cluster` and the second is a variant of the `Cluster` in which only the medoid remains. Examples:
 
 ```
 decluster (Cluster 1 [2,3,4])     = ([2,3,4], Cluster 1 [])
@@ -421,7 +421,7 @@ decluster (Cluster "cat" ["dog"]) = (["dog"], Cluster "cat" [])
 
 #### `deconfigure`
 
-Implement the `deconfigure` function which takes a `Configuration` and returns a `Tuple` in which the first value is a `List` of all non-medoid elements in the `Configuration` and the second is a `List` of all `Cluster`s in the original `Configuration` with their elements removed. Example:
+Implement the `deconfigure` function which takes a `Configuration` and returns a `Tuple` in which the first value is a list of all non-medoid elements in the `Configuration` and the second is a list of all `Cluster`s in the original `Configuration` with their elements removed. Example:
 
 ```
 deconfigure [Cluster 1 [2,3,4], Cluster 6 [7,8,9]] = (
@@ -480,7 +480,7 @@ Hint: consider using the `iterate` function.
 
 #### `kmedoids`
 
-Implement the `kmedoids` function which takes an `Int` representing _k_, a `Metric` and a `List` of elements to cluster and returns the lowest cost, according to the `Metric`, `Configuration` of those elements that it could find. The initial `Configuration` is created by creating _k_ `Cluster`s in which the first _k_ elements of the `List` are medoids. Example:
+Implement the `kmedoids` function which takes an `Int` representing _k_, a `Metric` and a list of elements to cluster and returns the lowest cost, according to the `Metric`, `Configuration` of those elements that it could find. The initial `Configuration` is created by creating _k_ `Cluster`s in which the first _k_ elements of the list are medoids. Example:
 
 ```
 kmedoids 3 (\x y -> (x - y)^2) [1,4,7,2,5,8,3,6,9] = [
