@@ -2,7 +2,7 @@
 
 ## Purpose
 
-This document is a guide to implementing the k-medoids clustering algorithm using Haskell. It describes the components of the algorithm and (coming soon!) also provides examples of those components. The goals of this document are to 1) assist readers to build a small program in Haskell and 2) expose readers to design considerations in functional programming.
+This document is a guide to implementing the k-medoids clustering algorithm using Haskell. It describes the components of the algorithm and also provides examples of those components. The goals of this document are to 1) assist readers to build a small program in Haskell and 2) expose readers to design considerations in functional programming.
 
 ## Contents
 
@@ -19,20 +19,20 @@ This document is a guide to implementing the k-medoids clustering algorithm usin
 
 ## How to Use this Material
 
-This material consists of two parts: descriptions of the functions that comprise a Haskell implementation of the k-medoids clustering algorithm, and (coming soon!) example implementations of those functions. Each section in the first part of the document provides a brief overview of the concepts that will be covered in that section, then describes the functionality required to implement those concepts. The functions are presented in approximate order of their complexity, therefore it is suggested that you work through them in the presented order. In each case, first write down the type of the function, then address the base cases (where certain input values directly correspond to certain output values), then complete the implementation. Ensure your function has a defined result for all expected input values, and look for opportunities to simplify your function using existing functions and reductions.
+This material consists of two parts: descriptions of the functions that comprise a Haskell implementation of the k-medoids clustering algorithm, and example implementations of those functions. Each section in the first part of the document provides a brief overview of the concepts that will be covered in that section, then describes the functionality required to implement those concepts. The functions are presented in approximate order of their complexity, therefore it is suggested that you work through them in the presented order. In each case, first write down the type of the function, then address the base cases (where certain input values directly correspond to certain output values), then complete the implementation. Ensure your function has a defined result for all expected input values, and look for opportunities to simplify your function using reductions and existing functions.
 
 This material assumes little knowledge of Haskell, but you will have less trouble if you are familiar with the language's syntax and the creation of simple functions. If you are an absolute beginner then consider reading the first three lectures and attempting the first three labs of the [CIS194 (Spring 2013) Haskell course](http://www.seas.upenn.edu/%7Ecis194/spring13/). [This guide](https://github.com/futufeld/brainfunc) to implementing a Brainfuck interpreter in Haskell may also be useful preparation.
 
 ## Clustering and k-medoids
 
-Clustering is the act of arranging the elements of a dataset into groups based on their similarity. The resultant clusters can indicate prominent characteristics of the dataset, and the relative size of clusters can indicate the relative prominence of the characteristics to which they correspond. Automated clustering techniques make it viable to perform clustering on large datasets, and thereby gain insights into the data that might otherwise not be possible. The effectiveness of these techniques depends on the ability to quantify the similarity of elements in the dataset. Elements of the dataset are typically converted into real vectors, which enables the use of common metrics, such as the the L2 norm, or Euclidean norm, to measure the distance between them. However, it is not always possible or desirable to transform the elements of the dataset into vectors. The k-medoids algorithm belongs to a class of clustering algorithms that do not require a specific representation of the elements that they cluster, fulfilling this specific need.
+Clustering is the act of arranging the elements of a dataset into groups based on their similarity. The resultant clusters can indicate prominent characteristics of the dataset, and the relative size of clusters can indicate the relative prominence of those characteristics. Automated clustering techniques make it viable to perform clustering on large datasets, and thereby gain insights into the data that might otherwise not be possible. The effectiveness of these techniques depends on the ability to quantify the similarity of elements in the dataset. Elements of the dataset are typically converted into real vectors which enables the use of common metrics, such as the L2 norm, or Euclidean norm, to measure the distance between them. However, it is not always possible or desirable to transform the elements of the dataset into vectors. The k-medoids algorithm belongs to a class of clustering algorithms that do not require a specific representation of the elements that they cluster, fulfilling this specific need.
 
-The k-medoids algorithm depends on a distance metric that is able to compute, in some way, the dissimilarity of any two elements in the dataset. It uses this metric to both determine to which cluster an element should be assigned and how the elements should be organised within a cluster. The _k_ in _k-medoids_ refers to the number of clusters the algorithm configures the dataset into, and the _medoids_ in _k-medoids_ refers to the elements that are selected to 'represent' each cluster. The algorithm operates as follows:
+The k-medoids algorithm depends on a distance metric that is able to compute, in some way, the dissimilarity of any two elements in the dataset. It uses this metric to both determine to which cluster an element should be assigned and how the elements should be organised within a cluster. The _k_ in _k-medoids_ refers to the number of clusters the algorithm configures the dataset into, and the _medoids_ in _k-medoids_ refers to the elements that are selected to 'represent' each cluster. One interpretation of the algorithm is as follows:
 
 1. Select _k_ elements of the dataset and make each the medoid of an empty cluster.
 2. Assign each of the unassigned elements to the cluster that contains the medoid to which they are most similar, as determined by the distance metric.
 3. Replace the medoid in each cluster with the element of the cluster that is most similar, according to the distance metric, to its cluster neighbours.
-4. Until the configuration stabilises and no further improvement can be made: remove all (non-medoid) elements from all clusters and return to Step 2.
+4. Remove all (non-medoid) elements from all clusters and return to Step 2 until the configuration stabilises and no further improvement can be made.
 
 Despite its simplicity, this algorithm has some useful statistical properties and can provide substantial insight into datasets if paired with an appropriate distance metric.
 
@@ -198,6 +198,16 @@ sumDoubles [1.4, 2.5, 4.6] = 8.5
 sumDoubles []              = 0.0
 ```
 
+#### `minBy`
+
+Implement the `minBy` function which takes a function _f_ and a `List` and returns the smallest element of that `List`. The _f_ function maps elements of the list to `Double` values that represent the elements' 'size', by which they are sorted (smaller values first). Examples:
+
+```
+minBy length ["cube", "house", "cat"] = "cat"
+minBy (\x -> (x - 25)^2) [25, 16, 36] = 25
+minBy (-10) []                        = error "'minBy': list must not be empty"
+```
+
 #### `rotations`
 
 Implement the `rotations` function which returns all permutations of a `List` that can be generated by cyclically rotating that `List`. Examples:
@@ -208,15 +218,7 @@ rotations "cat"   = ["cat", "atc", "tca"]
 rotations []      = error "'rotations': list cannot be empty"
 ```
 
-#### `minBy`
-
-Implement the `minBy` function which takes a function _f_ and a `List` and returns the smallest element of that `List`. The 'size' of the elements is determined by the _f_ function which represents this as a `Double`. Examples:
-
-```
-minBy genericLength ["cube", "house", "cat"] = "cat"
-minBy (\x -> (x - 25)^2) [25, 16, 36]        = 25
-minBy (-10) []                               = error "'minBy': list must not be empty"
-```
+Hint: consider making use of the `cycle` function.
 
 ## Implementing k-medoids
 
@@ -238,7 +240,7 @@ For the k-medoids algorithm to function, the ability to measure the distance bet
 type Metric a = a -> a -> Double
 ```
 
-That is, a value of type `Metric` is any function that takes two values of the same type and produces a result of type `Double`. We will soon see that the type of `a` in `Metric a` must correspond to the type of `a` in `Cluster a` when `Metric`s and `Cluster`s are used in conjunction. The output of `Metric` functions is intended to quantify the dissimilarity of the `a` values to which the `Metric` is applied. This enables us to determine the similarity of elements to different `Cluster`s and the similarity of medoids to the elements within their `Cluster`.
+That is, a value of type `Metric` is any function that takes two values of the same type and produces a result of type `Double`. We will soon see that the type of `a` in `Metric a` must correspond to the type of `a` in `Cluster a` when `Metric`s and `Cluster`s are used in conjunction. The output of a `Metric` function is intended to quantify the dissimilarity of the `a` values to which the metric is applied. The term _distance_ refers to the extent of dissimilarity between two elements, therefore values of type `Metric` represent distance functions. The sum distance of a medoid from its cluster's elements is referred to as the _cost_ of the cluster. Using the concepts of _distance_ and _cost_, we can determine the similarity of elements to different clusters, as well as the similarity of medoids to the elements within their cluster.
 
 #### Required Functions
 
@@ -247,7 +249,7 @@ With the types outlined in this section, it is possible to create the basic func
 * `newCluster`: Creates an empty cluster that contains a specific medoid.
 * `addElement`: Adds a (non-medoid) element to an existing cluster.
 * `clusterDistance`: Measures the distance between an element and a cluster.
-* `clusterCost`: Measures how representative a cluster's medoid is of the elements in that cluster. Lower is better.
+* `clusterCost`: Measures how representative a cluster's medoid is of the elements in that cluster (lower is better).
 
 #### `newCluster`
 
@@ -270,7 +272,7 @@ addElement (Cluster 1 [2,3])  4     = Cluster 1 [2,3,4]
 
 #### `clusterDistance`
 
-Implement the `clusterDistance` function which takes a `Metric`, a value and a `Cluster` and returns the distance of the value from the `Cluster` according to the `Metric`. Examples:
+Implement the `clusterDistance` function which takes a `Metric`, a value of any type, and a `Cluster` and returns the distance of the value from the `Cluster` according to the `Metric`. Examples:
 
 ```
 f x y = genericLength x - genericLength y
@@ -291,13 +293,13 @@ clusterCost (\x y -> (x - y)^2) (Cluster 3 [1,5,7,9]) = 60.0
 
 #### Selecting Appropriate Clusters
 
-With the definition of `Cluster` and basic functionality for interacting with values of this type, it is now possible to create functionality for the assignment of elements to `Cluster`s that are within a cluster configuration. The cluster configuration, unlike clusters, has no remarkable values and can be defined as an alias of `List`:
+With the definition of `Cluster` and basic functionality for interacting with values of this type, it is now possible to create functionality for the assignment of elements to `Cluster`s that are within a cluster _configuration_ (the collection of clusters to which elements of the dataset are assigned). The cluster configuration, unlike clusters, has no remarkable values and can be defined as an alias of `List`:
 
 ```
 type Configuration a = [Cluster a]
 ```
 
-where `a` indicates not only that we can have a `Configuration` of any type, but also that the `Configuration` consists of `Cluster`s of that same type. With the `Configuration` type, we can begin implementing the primary actions of the k-medoids algorithm.
+where `a` indicates not only that we can have a `Configuration` of any type, but also that the `Configuration` consists of `Cluster`s of that same type. With the `Configuration` type, we can begin implementing the primary functionality of the k-medoids algorithm.
 
 #### Required Functions
 
@@ -317,6 +319,8 @@ nearestCluster (\x y -> (x - y)^2) cfg 77 = [
     Cluster 88 [67,91], Cluster 26 [23,27], Cluster 41 [48,52]
 ]
 ```
+
+Hint: consider making use of the `minBy` and `rotations` functions.
 
 #### `assignElement`
 
@@ -344,7 +348,7 @@ assignElements (\x y -> (x - y)^2) [43,13,64,29,101] cfg = [
 
 #### Selecting Appropriate Medoids
 
-The k-medoids algorithm must ensure that the medoid of each cluster is the most 'representative' element of that cluster so that: 1) the user can gain some insight into the 'topic' of the cluster (the medoid is an implicit descriptor of the cluster), and 2) so that the cluster is assigned elements most similar to its current collection of elements in the next round of assignments (if the configuration does not stabilise first). This involves checking every element of the cluster to see if it is more similar to its cluster neighbours than the current medoid and, if so, swapping that element and the medoid. The sum distance of a medoid from its cluster's elements is referred to as the _cost_ of the cluster; the objective of this step of the algorithm is cluster cost minimisation.
+The k-medoids algorithm must ensure that the medoid of each cluster is the most 'representative' element of that cluster so that: 1) the user can gain some insight into the 'topic' of the cluster (the medoid is an implicit descriptor of the cluster), and 2) so that the cluster is assigned elements most similar to its current collection of elements in the next round of assignments (if the configuration does not stabilise first). This involves checking every element of the cluster to see if it is more similar to its cluster neighbours than the current medoid and, if so, swapping that element and the medoid.
 
 #### Required Functions
 
@@ -363,6 +367,8 @@ clusterPermutations (Cluster 1 [2,3,4]) = [
     Cluster 1 [2,3,4], Cluster 2 [3,4,1], Cluster 3 [4,1,2], Cluster 4 [1,2,3]
 ]
 ```
+
+Hint: consider making use of the `rotations` function.
 
 #### `updateCluster`
 
@@ -387,11 +393,11 @@ updateConfiguration (\x y -> (x - y)^2) cfg = [
 
 #### Iterating on a Solution
 
-With the two main steps of the k-medoids algorithm complete, it is now possible to perform an iteration, or re-iteration, of the algorithm. To iterate a configuration, all non-medoid elements are removed from all clusters so that reclustering can be performed. After the elements are reassigned to the clusters, the clusters are re-optimised to ensure the medoids represent the possibly-changed set of elements in each cluster. If the selection of medoids in the previous iteration was effective, the reassignment of the removed elements should improve the quality of the configuration - this is the key assumption of the k-medoids algorithm and its effectiveness rests on the strength of this assumption with respect to the dataset being clustered.
+With the two main steps of the k-medoids algorithm complete, it is now possible to perform an iteration, or re-iteration, of the algorithm. To iterate a configuration, all non-medoid elements are removed from all clusters so that reclustering can be performed. After the elements are reassigned to the clusters, the clusters are re-optimised to ensure that the medoids are representative of the possibly-changed set of elements in each cluster. If the selection of medoids in the previous iteration was effective, the reassignment of the just-removed elements should improve the quality of the configuration - this is the key assumption of the k-medoids algorithm and its effectiveness rests on the strength of this assumption. That is to say, the configuration is not guaranteed to improve in each iteration of the k-medoids algorithm, but the design of the algorithm is such that it often does.
 
 #### Required Functions
 
-In conjunction with the functionality developed thus far, an iteration of the k-medoids algorithm can be performed with the following functions:
+In conjunction with the functionality developed thus far, an iteration of the k-medoids algorithm can be performed using the following functions:
 
 * `decluster`: Removes the elements from a cluster (excluding the medoid) so that they can be reassigned to the same or another cluster.
 * `deconfigure`: Removes the elements from all clusters so that they can be reassigned to the same or other clusters.
@@ -416,6 +422,8 @@ deconfigure [Cluster 1 [2,3,4], Cluster 6 [7,8,9]] = [
 ]
 ```
 
+Hint: consider using the `unzip` and `concat` functions.
+
 #### `kmedoidsIteration`
 
 Implement the 'kmedoidsIteration' function which takes a `Metric` and a `Configuration` and returns the result of applying one iteration of the k-medoids algorithm to that `Configuration`. Example:
@@ -431,19 +439,19 @@ kmedoidsIteration (\x y -> (x - y)^2) cfg = [
 
 #### Exploring the Solution Space
 
-The implementation of k-medoids is almost complete! All that remains is to create the functionality that guides and terminates the search for higher quality configurations, and to create a function that prevents the user from having to interact with the components of the algorithm's implementation. To guide the search, it is necessary to be able to compare the quality of configurations. In the k-medoids algorithm, a configuration's quality is quantified as the sum of all costs of its clusters, which is referred to as the configuration's _cost_. Once it is possible measure configuration cost, a simple search in which an initial configuration is iterated until its cost fails to improve can be implemented. This is referred to as a _greedy_ search strategy because it assumes that always accepting the optimal local, or 'immediate', solution will ultimately lead to the optimal overall solution, which is rarely the case. Even so, the design of the k-medoids algorithm will partially compensate and should be able to cluster most datasets with some success.
+The implementation of k-medoids is almost complete! All that remains is to create the functionality that guides and terminates the search for higher quality configurations, and to create a function that prevents the user from having to interact directly with the functions that make up the algorithm's implementation. To guide the search, it is necessary to be able to compare the quality of configurations. In the k-medoids algorithm, a configuration's quality is quantified as the sum of all costs of its clusters, which is referred to as the _configuration cost_. Once it is possible to measure configuration cost, a simple search in which an initial configuration is iterated until its cost fails to improve can be implemented. This is referred to as a _greedy_ search strategy because it assumes that always accepting the optimal local, or 'immediate', solution will ultimately lead to the optimal overall solution, which is rarely the case. Even so, the design of the k-medoids algorithm should enable the initial configuration to be improved to some extent.
 
 #### Required Functions
 
-To guide the discovery of increasingly high quality cluster configurations, we will need the following functions:
+To guide the discovery of increasingly high quality cluster configurations, we need the following functions:
 
-* `configurationCost`: Measures the suitability of how elements are arranged in the clusters of a configuration. Lower is better.
-* `localSearch`: Keeps applying iterations of the k-medoids algorithm until no further improvement is made.
+* `configurationCost`: Measures the suitability of how elements are arranged in the clusters of a configuration (lower is better).
+* `localSearch`: Keeps applying iterations of the k-medoids algorithm until no further improvement can be made.
 * `kmedoids`: Applies the k-medoids algorithm to a collection of elements, returning _k_ clusters of elements.
 
 #### `configurationCost`
 
-Implemement the `configurationCost` function which takes a `Metric` and a `Configuration` and returns the sum of all distances, according to the `Metric`, between the medoids and elements within each of the `Configuration`'s `Cluster`s. Example:
+Implemement the `configurationCost` function which takes a `Metric` and a `Configuration` and returns the sum of all distances, according to the `Metric`, between the medoids and elements within each of the `Cluster`s. Example:
 
 ```
 cfg = [Cluster 2 [1,3,4], Cluster 7 [6,8,9]]
@@ -461,9 +469,11 @@ kmedoidsIteration (\x y -> (x - y)^2) cfg = [
 ]
 ```
 
+Hint: consider using the `iterate` function.
+
 #### `kmedoids`
 
-Implement the `kmedoids` function which takes an `Int` _k_, a `Metric` and a `List` of elements to cluster and returns the lowest cost, according to the `Metric`, `Configuration` of those elements that it could find. The initial `Configuration` is created by creating _k_ `Cluster`s in which the first _k_ elements of the `List` are medoids. Example:
+Implement the `kmedoids` function which takes an `Int` representing _k_, a `Metric` and a `List` of elements to cluster and returns the lowest cost, according to the `Metric`, `Configuration` of those elements that it could find. The initial `Configuration` is created by creating _k_ `Cluster`s in which the first _k_ elements of the `List` are medoids. Example:
 
 ```
 kmedoids 3 (\x y -> (x - y)^2) [1,4,7,2,5,8,3,6,9] = [
@@ -473,6 +483,6 @@ kmedoids 3 (\x y -> (x - y)^2) [1,4,7,2,5,8,3,6,9] = [
 
 ## Extending the Implementation
 
-* It is possible for a configuration to slightly increase in cost before reaching lower cost states, but this potential cannot be realised by the current, greedy implementation of the `localSearch` function. Generally, the k-medoids algorithm is terminated after it fails to improve a configuration after a number of iterations. Implement an alternative search function that implements this strategy.
-* The quality of the configuration produced by the k-medoids algorithm is sensitive to the initial collection of medoids due to the extent that medoids influence element assignment. By selecting the _k_ first elements as medoids, the `kmedoids` function may contribute to poor solutions for particular datasets. Implement one or more functions that generate the initial set of medoids using alternative strategies and modify `kmedoids` to enable the user to provide their medoid-selection function of choice.
-* The `localSearch` function, as it is described in this document, hides information by discarding the `Configuration`s it generates in each iteration of search. These 'in-progress' `Configuration`s can provide valuable metadata regarding how the search of the solution space transpired, which can be valuable to individuals using the algorithm. Extended `localSearch` and `kmedoids` so that they return all `Configurations` generated in the process of producing the final result.
+* It is possible for a configuration to slightly increase in cost before reaching lower cost states, but this possibility is not accounted for by the current implementation of the `localSearch` function. Generally, the k-medoids algorithm is terminated after it fails to improve a configuration in some number of consecutive iterations. Implement an alternative search function that implements this strategy.
+* The quality of a configuration produced by the k-medoids algorithm is affected by the initial collection of medoids since they influence the subsequent assignment of elements. By simply selecting the first _k_ elements as medoids, the `kmedoids` function may contribute to poor solutions for particular datasets. Implement one or more functions that generate the initial set of medoids using alternative strategies and modify `kmedoids` to enable the user to provide their "medoids selection" function of choice.
+* The `localSearch` function, as it is described in this document, hides information by discarding the `Configuration`s it generates in each iteration of search. These 'in-progress' `Configuration`s can provide valuable metadata regarding how the search of the solution space transpired, which can be valuable to individuals using the implementation. Extend `localSearch` and `kmedoids` so that they return all `Configurations` generated in the process of producing the final result.
