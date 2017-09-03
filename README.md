@@ -125,6 +125,14 @@ cycle "cat"   = "catcatcatca...
 cycle []      = error "Prelude.cycle: empty list"
 ```
 
+#### `iterate :: (a -> a) -> a -> [a]`
+
+The `iterate` function generates an infinite `List` by repeatedly applying the `(a -> a)` function to the last generated element, starting with the non-function argument it receives. Example:
+
+```
+iterate (+3) 1 = [1, 4, 7, 11, ...
+```
+
 #### `map :: (a -> b) -> [a] -> [b]`
 
 The `map` function returns the result of applying the given function to every element in the given `List`. Examples:
